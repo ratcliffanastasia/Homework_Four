@@ -2,7 +2,7 @@
 title: "Homework_Four"
 author: "Anastasia Ratcliff"
 date: "10/29/2018"
-output: word_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
