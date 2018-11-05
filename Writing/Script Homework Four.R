@@ -27,7 +27,11 @@ unsolved <- homicides %>%
   mutate(disposition = factor(disposition))%>%
   mutate(disposition = fct_recode(disposition, '1' = 'Closed without arrest',
                                   '1'= 'Open/No arrest',
-                                  '0' = 'Closed by arrest '))
+                                  '0' = 'Closed by arrest '))%>%
+  group_by(city_name)%>%
+  mutate(total_homicides = n()) %>%
+  mutate(solved = disposition == '1') %>%
+  mutate(solved = sum(solved))%>%
   
 
 
