@@ -5,6 +5,8 @@ library(tidyverse)
 library(lubridate)
 library(readr)
 library(stringr)
+library(purrr)
+library()
 
 
 
@@ -15,24 +17,28 @@ homicides <- homicide_data
 homicides <- homicides %>%
   unite(city_name, city, state, sep = ",", remove =FALSE )
 
+
+
 #new dataframe
 #one row per city that gives total homicides 
 #one row number of unsolved homicides 
 unsolved <- homicides %>%
-  select(city_name, disposition)%>%
-  group_by(city_name)%>%
+  select(city_name, disposition) %>%
+  mutate(unsolved_homicides =  str_extract(disposition, "Closed without arrest|Open/No arrest"))%>%
+  group_by(city_name, disposition, unsolved_homicides)%>%
+  count(city_name)
+ 
+    
+   
   
 
+  
+  
+  
+  
 
-
   
-  
-  
-  
-  mutate(unsolved_homicides = str_extract(disposition, "Closed without arrest|Open/No arrest",)) %>%
-  
-  group_by(city_name)
-  
+  ?maps2
 
 
 
