@@ -37,14 +37,15 @@ unsolved <- homicides %>%
   ungroup () %>%
   rename(total_homicides = n)
   
-
-
-
-
-
-
-
-
-
 #city of Baltimore use prop.test
+
+baltimore <- unsolved %>%
+  filter(city_name == 'Baltimore,MD')
+
+
+
+
+
+
+
   
