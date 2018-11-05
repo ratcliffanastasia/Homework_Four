@@ -6,7 +6,8 @@ library(lubridate)
 library(readr)
 library(stringr)
 library(purrr)
-library()
+library(broom)
+library(tibble)
 
 
 
@@ -15,7 +16,7 @@ homicides <- homicide_data
 
 #create new column called city_name
 homicides <- homicides %>%
-  unite(city_name, city, state, sep = ",", remove =FALSE )%>%
+  unite(city_name, city, state, sep = ",", remove =FALSE )
 
 
 #new dataframe
@@ -30,9 +31,9 @@ unsolved <- homicides %>%
                                   '0' = 'Closed by arrest '))%>%
   group_by(city_name)%>%
   mutate(total_homicides = n()) %>%
-  mutate(unsolved = disposition == '1') %>%
-  mutate(unsolved = sum(unsolved))%>%
-  group_by(city_name, unsolved)%>%
+  mutate(tote_unsolved = disposition == '1') %>%
+  mutate(tote_unsolved = sum(tote_unsolved))%>%
+  group_by(city_name, tote_unsolved)%>%
   count()%>%
   ungroup () %>%
   rename(total_homicides = n)
@@ -40,14 +41,29 @@ unsolved <- homicides %>%
 #city of Baltimore use prop.test
 
 baltimore <- unsolved %>%
-  filter(city_name == 'Baltimore,MD')
+  filter(city_name == 'Baltimore,MD')%>%
+  
 
 #prop.test
-prop.test(baltimore$unsolved,
+prop.test(baltimore$tote_unsolved,
           baltimore$total_homicides)
 #object from prop test
-baltimore_pt <- prop.test(baltimore$unsolved,
+baltimore_pt <- prop.test(baltimore$tote_unsolved,
                           baltimore$total_homicides)
+
+#tidy function from broom 
+baltimore_pt %>%
+  tidy() %>%
+  select(estimate, conf.low, conf.high)
+
+#running prop.test for all of them
+
+test1 <- purrr::map2(unsolved$tote_unsolved,unsolved$total_homicides, 
+            ~ prop.test(.x, n = .y))
+
+unsolved <-  unsolved %>%
+  mutate( sts_col = purrr::map2(unsolved$tote_unsolved,unsolved$total_homicides, 
+              ~ prop.test(.x, n = .y)))%>%
 
 
 
