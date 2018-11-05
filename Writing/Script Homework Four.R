@@ -30,8 +30,12 @@ unsolved <- homicides %>%
                                   '0' = 'Closed by arrest '))%>%
   group_by(city_name)%>%
   mutate(total_homicides = n()) %>%
-  mutate(solved = disposition == '1') %>%
-  mutate(solved = sum(solved))%>%
+  mutate(unsolved = disposition == '1') %>%
+  mutate(unsolved = sum(unsolved))%>%
+  group_by(city_name, unsolved)%>%
+  count()%>%
+  ungroup () %>%
+  rename(total_homicides = n)
   
 
 
