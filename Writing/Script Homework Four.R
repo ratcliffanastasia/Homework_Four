@@ -63,7 +63,17 @@ test1 <- purrr::map2(unsolved$tote_unsolved,unsolved$total_homicides,
 
 unsolved <-  unsolved %>%
   mutate( sts_col = purrr::map2(unsolved$tote_unsolved,unsolved$total_homicides, 
-              ~ prop.test(.x, n = .y)))%>%
+              ~ prop.test(.x, n = .y)%>%
+  {tibble(estimate =.[["estimate"]],
+          CI_lower = .[["conf.int"]][[1]],
+          CI_upper =.[["conf.int"]][[2]])}))%>%
+  unnest()%>%
+  mutate(city_name = factor (city_name, levels = city_name[order(estimate)]))%>%
+  select(-estimate1)
+
+
+
+  
 
 
 
