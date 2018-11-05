@@ -42,6 +42,15 @@ unsolved <- homicides %>%
 baltimore <- unsolved %>%
   filter(city_name == 'Baltimore,MD')
 
+#prop.test
+prop.test(baltimore$unsolved,
+          baltimore$total_homicides)
+#object from prop test
+baltimore_pt <- prop.test(baltimore$unsolved,
+                          baltimore$total_homicides)
+
+
+
 
 
 
