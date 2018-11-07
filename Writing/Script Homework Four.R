@@ -1,4 +1,3 @@
-#load liabraries
 library(dplyr)
 library(ggplot2)
 library(tidyverse)
@@ -37,12 +36,12 @@ unsolved <- homicides %>%
   count()%>%
   ungroup () %>%
   rename(total_homicides = n)
-  
+
 #city of Baltimore use prop.test
 
 baltimore <- unsolved %>%
-  filter(city_name == 'Baltimore,MD')%>%
-  
+  filter(city_name == 'Baltimore,MD')
+
 
 #prop.test
 prop.test(baltimore$tote_unsolved,
@@ -59,17 +58,38 @@ baltimore_pt %>%
 #running prop.test for all of them
 
 test1 <- purrr::map2(unsolved$tote_unsolved,unsolved$total_homicides, 
-            ~ prop.test(.x, n = .y))
+                     ~ prop.test(.x, n = .y))
 
 unsolved <-  unsolved %>%
   mutate( sts_col = purrr::map2(unsolved$tote_unsolved,unsolved$total_homicides, 
-              ~ prop.test(.x, n = .y)%>%
-  {tibble(estimate =.[["estimate"]],
-          CI_lower = .[["conf.int"]][[1]],
-          CI_upper =.[["conf.int"]][[2]])}))%>%
+                                ~ prop.test(.x, n = .y)%>%
+                                {tibble(estimate =.[["estimate"]],
+                                        CI_lower = .[["conf.int"]][[1]],
+                                        CI_upper =.[["conf.int"]][[2]])}))%>%
   unnest()%>%
   mutate(city_name = factor (city_name, levels = city_name[order(estimate)]))%>%
-  select(-estimate1)
+  select(-estimate1,-CI_lower1,-CI_upper1)
+
+#plot data 
+
+unsolved_plot <- ggplot(unsolved)+
+  geom_errorbarh(aes(xmin = CI_lower,
+                     xmax = CI_upper, 
+                     y = reorder(city_name, estimate)),height = 0, color = "white")+
+  geom_point(mapping = aes(x = estimate, y = reorder(city_name, estimate)),
+             color = "white", size = 2) +
+  ggtitle("Unsolved homicides by city",
+          subtitle = "Bars show 95% confidence interval") +
+  labs(x = "Percent of homicides that are unsolved",
+       y = "") +
+  scale_x_continuous(breaks = c(0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
+                     limits = c(.2,.8),
+                     label = c("20.0%", "30.0%",
+                               "40.0%", "50.0%", 
+                               "60.0%", "70.0%")) +
+  theme_dark()
+
+
 
 
 
