@@ -5,6 +5,10 @@ date: "11/7/2018"
 output: pdf_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
 ```{r}
 
 library(dplyr)
