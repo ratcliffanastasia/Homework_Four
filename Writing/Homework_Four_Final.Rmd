@@ -1,0 +1,114 @@
+---
+title: "Homework_Four_Final"
+author: "Anastasia Ratcliff"
+date: "11/7/2018"
+output: pdf_document
+---
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(lubridate)
+library(readr)
+library(stringr)
+library(purrr)
+library(broom)
+library(tibble)
+
+```
+
+
+```{r}
+# Read in the data as an R Object
+homicides <- read_csv("/Users/anastasiaratcliff/Desktop/R- Programing /Homework_Four/Data/homicide-data.csv")
+
+
+#create new column called city_name
+homicides <- homicides %>%
+  unite(city_name, city, state, sep = ",", remove =FALSE )
+
+
+#new dataframe
+#one row per city that gives total homicides 
+
+#one row number of unsolved homicides 
+unsolved <- homicides %>%
+  select(city_name, disposition)%>%
+  mutate(disposition = factor(disposition))%>%
+  mutate(disposition = fct_recode(disposition, '1' = 'Closed without arrest',
+                                  '1'= 'Open/No arrest',
+                                  '0' = 'Closed by arrest '))%>%
+  group_by(city_name)%>%
+  mutate(total_homicides = n()) %>%
+  mutate(tote_unsolved = disposition == '1') %>%
+  mutate(tote_unsolved = sum(tote_unsolved))%>%
+  group_by(city_name, tote_unsolved)%>%
+  count()%>%
+  ungroup () %>%
+  rename(total_homicides = n)
+
+#city of Baltimore use prop.test
+
+baltimore <- unsolved %>%
+  filter(city_name == 'Baltimore,MD')
+
+
+#prop.test
+prop.test(baltimore$tote_unsolved,
+          baltimore$total_homicides)
+#object from prop test
+baltimore_pt <- prop.test(baltimore$tote_unsolved,
+                          baltimore$total_homicides)
+
+#tidy function from broom 
+baltimore_pt %>%
+  tidy() %>%
+  select(estimate, conf.low, conf.high)
+
+```
+
+```{r}
+
+#running prop.test for all of them
+
+test1 <- purrr::map2(unsolved$tote_unsolved,unsolved$total_homicides, 
+                     ~ prop.test(.x, n = .y))
+
+unsolved <-  unsolved %>%
+  mutate( sts_col = purrr::map2(unsolved$tote_unsolved,unsolved$total_homicides, 
+                                ~ prop.test(.x, n = .y)%>%
+                                {tibble(estimate =.[["estimate"]],
+                                        CI_lower = .[["conf.int"]][[1]],
+                                        CI_upper =.[["conf.int"]][[2]])}))%>%
+  unnest()%>%
+  mutate(city_name = factor (city_name, levels = city_name[order(estimate)]))
+
+
+```
+
+```{r}
+
+#plot data 
+
+unsolved_plot <- ggplot(unsolved)+
+  geom_errorbarh(aes(xmin = CI_lower,
+                     xmax = CI_upper, 
+                     y = reorder(city_name, estimate)),height = 0, color = "white")+
+  geom_point(mapping = aes(x = estimate, y = reorder(city_name, estimate)),
+             color = "white", size = 2) +
+  ggtitle("Unsolved homicides by city",
+          subtitle = "Bars show 95% confidence interval") +
+  labs(x = "Percent of homicides that are unsolved",
+       y = "") +
+  scale_x_continuous(breaks = c(0.2, 0.3, 0.4, 0.5, 0.6, 0.7),
+                     limits = c(.2,.8),
+                     label = c("20.0%", "30.0%",
+                               "40.0%", "50.0%", 
+                               "60.0%", "70.0%")) +
+  theme_dark()
+
+unsolved_plot
+
+```
